@@ -1,0 +1,34 @@
+{
+	"luci-app-cloudflarespeedtest": {
+		"read": {
+			"cgi-io": ["read"],
+			"uci": {
+				"cloudflarespeedtest": ["read"]
+			},
+			"file": {
+				"/usr/share/cloudflarespeedtestresult.txt": ["read"],
+				"/var/log/cloudflarespeedtest.log": ["read"],
+				"/usr/share/CloudflareSpeedTest/ip.txt": ["read"],
+				"/usr/share/CloudflareSpeedTest/ipv6.txt": ["read"]
+			},
+			"luci": ["login"]
+		},
+		"write": {
+			"uci": {
+				"cloudflarespeedtest": ["read", "write"]
+			},
+			"file": {
+				"/usr/share/CloudflareSpeedTest/ip.txt": ["write"],
+				"/usr/share/CloudflareSpeedTest/ipv6.txt": ["write"],
+				"/var/log/cloudflarespeedtest.log": ["write"]
+			},
+			"luci": ["login"]
+		},
+		"execute": {
+			"cgi-io": ["exec"],
+			"file": {
+				"/usr/bin/cloudflarespeedtest/cloudflarespeedtest.sh": ["exec"]
+			}
+		}
+	}
+}

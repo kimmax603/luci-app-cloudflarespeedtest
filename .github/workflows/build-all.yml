@@ -1,0 +1,149 @@
+name: Build All ipk Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install po2lmo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make
+          git clone --depth 1 https://github.com/openwrt/luci.git /tmp/luci-src
+          cd /tmp/luci-src/modules/luci-base/src
+          make po2lmo
+          sudo cp po2lmo /usr/local/bin/
+          cd /
+          rm -rf /tmp/luci-src
+
+      - name: Compile translation
+        run: |
+          po2lmo po/zh-cn/cloudflarespeedtest.po po/zh-cn/cloudflarespeedtest.zh-cn.lmo
+          ls -la po/zh-cn/
+
+      - name: Build all ipk packages
+        run: |
+          PKG_NAME="luci-app-cloudflarespeedtest"
+          PKG_VERSION="${GITHUB_REF_NAME#v}"
+          [ -z "$PKG_VERSION" ] && PKG_VERSION="manual"
+          CFST_VERSION=$(cat cfst_version.txt | tr -d '[:space:]')
+          echo "=== Config ==="
+          echo "Package version: ${PKG_VERSION}"
+          echo "CFST version: ${CFST_VERSION}"
+          echo "================"
+
+          SRC="${{ github.workspace }}"
+          OUTPUT="${{ github.workspace }}/output"
+          rm -rf ${OUTPUT}
+          mkdir -p ${OUTPUT}
+
+          ARCHS="amd64 arm64 armv7 armv6 armv5 mips mipsle mips64 mips64le 386"
+          SUCCESS_COUNT=0
+          FAIL_COUNT=0
+
+          for ARCH in ${ARCHS}; do
+              echo ""
+              echo "=========================================="
+              echo "Building: ${ARCH}"
+              echo "=========================================="
+
+              BUILD_DIR="${{ github.workspace }}/build-${ARCH}"
+              PKG_DIR="${BUILD_DIR}/${PKG_NAME}"
+              rm -rf ${BUILD_DIR}
+
+              mkdir -p ${PKG_DIR}/usr/lib/lua/luci/controller
+              mkdir -p ${PKG_DIR}/usr/lib/lua/luci/model/cbi/cloudflarespeedtest
+              mkdir -p ${PKG_DIR}/usr/lib/lua/luci/view/cloudflarespeedtest
+              mkdir -p ${PKG_DIR}/usr/lib/lua/luci/i18n
+              mkdir -p ${PKG_DIR}/usr/bin/cloudflarespeedtest
+              mkdir -p ${PKG_DIR}/usr/share/rpcd/acl.d
+              mkdir -p ${PKG_DIR}/etc/config
+              mkdir -p ${PKG_DIR}/etc/init.d
+              mkdir -p ${PKG_DIR}/control
+
+              CFST_URL="https://github.com/XIU2/CloudflareSpeedTest/releases/download/${CFST_VERSION}/cfst_linux_${ARCH}.tar.gz"
+              echo "  Downloading: ${CFST_URL}"
+              curl -fSL "${CFST_URL}" -o /tmp/cfst_${ARCH}.tar.gz
+              if [ $? -ne 0 ]; then
+                  echo "  FAILED to download"
+                  FAIL_COUNT=$((FAIL_COUNT + 1))
+                  continue
+              fi
+
+              cd /tmp && tar xzf cfst_${ARCH}.tar.gz
+              if [ $? -ne 0 ] || [ ! -f /tmp/cfst ]; then
+                  echo "  FAILED to extract"
+                  FAIL_COUNT=$((FAIL_COUNT + 1))
+                  continue
+              fi
+
+              chmod +x /tmp/cfst
+              mv /tmp/cfst ${PKG_DIR}/usr/bin/cloudflarespeedtest/cfst
+              rm -f /tmp/cfst_${ARCH}.tar.gz
+
+              cp ${SRC}/luasrc/controller/cloudflarespeedtest.lua ${PKG_DIR}/usr/lib/lua/luci/controller/
+              cp ${SRC}/luasrc/model/cbi/cloudflarespeedtest/*.lua ${PKG_DIR}/usr/lib/lua/luci/model/cbi/cloudflarespeedtest/
+              cp ${SRC}/luasrc/view/cloudflarespeedtest/*.htm ${PKG_DIR}/usr/lib/lua/luci/view/cloudflarespeedtest/
+              cp ${SRC}/po/zh-cn/cloudflarespeedtest.zh-cn.lmo ${PKG_DIR}/usr/lib/lua/luci/i18n/
+              cp ${SRC}/root/usr/bin/cloudflarespeedtest/cloudflarespeedtest.sh ${PKG_DIR}/usr/bin/cloudflarespeedtest/
+              cp ${SRC}/root/usr/bin/cloudflarespeedtest/proxy.sh ${PKG_DIR}/usr/bin/cloudflarespeedtest/
+              cp ${SRC}/root/usr/share/rpcd/acl.d/luci-app-cloudflarespeedtest.json ${PKG_DIR}/usr/share/rpcd/acl.d/
+              cp ${SRC}/root/etc/config/cloudflarespeedtest ${PKG_DIR}/etc/config/
+              cp ${SRC}/root/etc/init.d/cloudflarespeedtest ${PKG_DIR}/etc/init.d/
+              chmod +x ${PKG_DIR}/usr/bin/cloudflarespeedtest/*.sh
+              chmod +x ${PKG_DIR}/etc/init.d/cloudflarespeedtest
+
+              printf "Package: %s\nVersion: %s-1\nDepends: luci-base, curl, openssl-util\nSource: https://github.com/kimmax603/luci-app-cloudflarespeedtest\nLicense: GPL-3.0\nSection: luci\nArchitecture: all\nMaintainer: kimmax603\nTitle: Cloudflare Speed Test (%s)\nDescription: Cloudflare IP speed test with DNS update. Includes cfst %s binary for %s architecture.\n" "${PKG_NAME}" "${PKG_VERSION}" "${ARCH}" "${CFST_VERSION}" "${ARCH}" > ${PKG_DIR}/control/control
+
+              echo "/etc/config/cloudflarespeedtest" > ${PKG_DIR}/control/conffiles
+
+              printf '#!/bin/sh\n[ -n "$IPKG_INSTROOT" ] || {\nchmod +x /usr/bin/cloudflarespeedtest/cfst 2>/dev/null\nrm -f /tmp/luci-*\n/etc/init.d/rpcd restart 2>/dev/null\n/etc/init.d/uhttpd restart 2>/dev/null\n}\n' > ${PKG_DIR}/control/postinst
+              chmod 755 ${PKG_DIR}/control/postinst
+
+              cd ${PKG_DIR}
+              tar czf ${BUILD_DIR}/data.tar.gz --exclude='./control' -C ${PKG_DIR} .
+              cd ${PKG_DIR}/control
+              tar czf ${BUILD_DIR}/control.tar.gz .
+              echo "2.0" > ${BUILD_DIR}/debian-binary
+
+              cd ${BUILD_DIR}
+              IPK_FILE="${PKG_NAME}_${PKG_VERSION}-1_all_${ARCH}.ipk"
+              tar czf ${OUTPUT}/${IPK_FILE} ./debian-binary ./control.tar.gz ./data.tar.gz
+
+              IPK_SIZE=$(ls -lh ${OUTPUT}/${IPK_FILE} | awk '{print $5}')
+              echo "  SUCCESS: ${IPK_FILE} (${IPK_SIZE})"
+              SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+              rm -rf ${BUILD_DIR}
+          done
+
+          echo ""
+          echo "=========================================="
+          echo "Build Complete!"
+          echo "Success: ${SUCCESS_COUNT}"
+          echo "Failed: ${FAIL_COUNT}"
+          echo "=========================================="
+          ls -lh ${OUTPUT}/*.ipk
+
+      - name: Upload all ipk files
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-ipk-packages
+          path: ${{ github.workspace }}/output/*.ipk
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ github.workspace }}/output/*.ipk

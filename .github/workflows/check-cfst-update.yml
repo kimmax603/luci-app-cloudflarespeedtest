@@ -1,0 +1,61 @@
+name: Check cfst Update
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 每天 8:00 UTC 检查
+  workflow_dispatch:
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check latest cfst version
+        id: check
+        run: |
+          # 获取上游最新版本
+          LATEST=$(curl -s https://api.github.com/repos/XIU2/CloudflareSpeedTest/releases/latest | grep '"tag_name"' | cut -d '"' -f 4)
+          echo "Latest upstream version: ${LATEST}"
+
+          # 获取当前记录的版本
+          CURRENT=$(cat cfst_version.txt 2>/dev/null || echo "none")
+          echo "Current tracked version: ${CURRENT}"
+
+          if [ "${LATEST}" != "${CURRENT}" ]; then
+            echo "has_update=true" >> $GITHUB_OUTPUT
+            echo "new_version=${LATEST}" >> $GITHUB_OUTPUT
+          else
+            echo "has_update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update version file
+        if: steps.check.outputs.has_update == 'true'
+        run: |
+          echo "${{ steps.check.outputs.new_version }}" > cfst_version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cfst_version.txt
+          git commit -m "chore: update cfst to ${{ steps.check.outputs.new_version }}"
+          git push
+
+      - name: Create new release tag
+        if: steps.check.outputs.has_update == 'true'
+        run: |
+          # 使用 XIU2 的版本号作为 tag
+          NEW_TAG="${{ steps.check.outputs.new_version }}"
+          git tag ${NEW_TAG}
+          git push origin ${NEW_TAG}
+          echo "Created tag: ${NEW_TAG}"
+
+      - name: Notify
+        if: steps.check.outputs.has_update == 'true'
+        run: |
+          echo "=========================================="
+          echo " cfst updated!"
+          echo " Old version: $(cat cfst_version.txt 2>/dev/null)"
+          echo " New version: ${{ steps.check.outputs.new_version }}"
+          echo " New ipk will be built automatically"
+          echo "=========================================="

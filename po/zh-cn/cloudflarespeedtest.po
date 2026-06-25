@@ -1,0 +1,358 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: luci-app-cloudflarespeedtest\n"
+
+msgid "Cloudflare Speed Test"
+msgstr "Cloudflare 优选IP"
+
+msgid "Cloudflare DNS Update"
+msgstr "Cloudflare DNS 更新"
+
+msgid "Configure Cloudflare DNS API to update DNS records after speed test"
+msgstr "配置 Cloudflare DNS API，测速完成后自动更新 DNS 记录"
+
+msgid "Basic Settings"
+msgstr "基本设置"
+
+msgid "Cloudflare DNS"
+msgstr "Cloudflare DNS"
+
+msgid "Logs"
+msgstr "日志"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Enable scheduled Cloudflare IP speed test"
+msgstr "启用定时 Cloudflare IP 测速"
+
+msgid "Scheduled Task"
+msgstr "定时任务"
+
+msgid "Enable daily scheduled speed test (cron job)"
+msgstr "启用每日定时测速（cron 定时任务）"
+
+msgid "IPv6 Mode"
+msgstr "IPv6 模式"
+
+msgid "Enable IPv6 speed test (IPv4 will not be tested)"
+msgstr "启用 IPv6 测速（启用后将不测试 IPv4）"
+
+msgid "Bandwidth (Mbps)"
+msgstr "带宽 (Mbps)"
+
+msgid "Your broadband speed in Mbps. E.g. 100M broadband = 100"
+msgstr "你的宽带速度，单位 Mbps。例如 100M 宽带填 100"
+
+msgid "Speed Test URL"
+msgstr "测速地址"
+
+msgid "Custom download test URL"
+msgstr "自定义下载测速地址"
+
+msgid "Custom Cron"
+msgstr "自定义定时"
+
+msgid "Enable custom cron expression"
+msgstr "启用自定义 cron 表达式"
+
+msgid "Cron Expression"
+msgstr "Cron 表达式"
+
+msgid "Hour"
+msgstr "时"
+
+msgid "Minute"
+msgstr "分"
+
+msgid "Proxy Plugins"
+msgstr "代理插件"
+
+msgid "Keep Current"
+msgstr "保持现状"
+
+msgid "Disable During Test"
+msgstr "测速时关闭"
+
+msgid "Temporarily disable all proxy plugins during speed test, auto restore after"
+msgstr "测速时临时关闭所有代理插件（PassWall/OpenClash/SSR-Plus/Nikki 等），测速后自动恢复"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Show advanced speed test parameters"
+msgstr "显示高级测速参数"
+
+msgid "Threads"
+msgstr "测速线程数"
+
+msgid "Number of concurrent threads for latency test (1-1000)"
+msgstr "延迟测速并发线程数 (1-1000)"
+
+msgid "Test Count"
+msgstr "测速次数"
+
+msgid "Number of latency tests per IP"
+msgstr "每个 IP 的延迟测速次数"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "Port for latency/download test (default: 443)"
+msgstr "延迟/下载测速端口（默认 443）"
+
+msgid "HTTPing Mode"
+msgstr "HTTPing 模式"
+
+msgid "TCPing (default)"
+msgstr "TCPing（默认）"
+
+msgid "HTTPing"
+msgstr "HTTPing"
+
+msgid "HTTPing mode can get region code but may be detected as scanning"
+msgstr "HTTPing 模式可获取地区码，但可能被识别为扫描行为"
+
+msgid "HTTPing Valid Code"
+msgstr "HTTPing 有效状态码"
+
+msgid "Valid HTTP status code for HTTPing test (e.g. 200,301,302)"
+msgstr "HTTPing 测速的有效 HTTP 状态码（如 200,301,302）"
+
+msgid "Region Filter"
+msgstr "地区过滤"
+
+msgid "IATA airport codes, comma separated. E.g. HKG,LAX,NRT (HTTPing only)"
+msgstr "IATA 机场码，逗号分隔。如 HKG,LAX,NRT（仅 HTTPing 模式）"
+
+msgid "Avg Latency Upper (ms)"
+msgstr "平均延迟上限 (ms)"
+
+msgid "Only output IPs with average latency below this value"
+msgstr "只输出平均延迟低于此值的 IP"
+
+msgid "Avg Latency Lower (ms)"
+msgstr "平均延迟下限 (ms)"
+
+msgid "Only output IPs with average latency above this value"
+msgstr "只输出平均延迟高于此值的 IP"
+
+msgid "Packet Loss Upper"
+msgstr "丢包率上限"
+
+msgid "Only output IPs with packet loss below this rate (0.00-1.00, 0=no loss)"
+msgstr "只输出丢包率低于此值的 IP（0.00-1.00，0=过滤任何丢包）"
+
+msgid "Download Count"
+msgstr "下载测速数量"
+
+msgid "Number of IPs to download test after latency sort"
+msgstr "延迟排序后进行下载测速的 IP 数量"
+
+msgid "Download Timeout (s)"
+msgstr "下载超时 (s)"
+
+msgid "Max download test time per IP in seconds"
+msgstr "每个 IP 下载测速最长时间（秒）"
+
+msgid "Download Speed Lower (MB/s)"
+msgstr "下载速度下限 (MB/s)"
+
+msgid "Only output IPs with download speed above this value (0=no limit)"
+msgstr "只输出下载速度高于此值的 IP（0=不限制）"
+
+msgid "Disable Download Test"
+msgstr "禁用下载测速"
+
+msgid "Only do latency test, sort by latency"
+msgstr "仅进行延迟测速，按延迟排序"
+
+msgid "Display Count"
+msgstr "显示数量"
+
+msgid "Number of results to display (0=no display)"
+msgstr "显示结果数量（0=不显示）"
+
+msgid "Test All IPs"
+msgstr "测试所有 IP"
+
+msgid "Test every IP in the range instead of random one per /24 (IPv4 only)"
+msgstr "测试范围内每个 IP 而非每个 /24 随机一个（仅 IPv4）"
+
+msgid "Debug Mode"
+msgstr "调试模式"
+
+msgid "Show detailed error messages during test"
+msgstr "测速过程中显示详细错误信息"
+
+msgid "Custom IP Data"
+msgstr "指定 IP 数据"
+
+msgid "Specify IP ranges directly, comma separated. E.g. 1.1.1.1,2.2.2.2/24"
+msgstr "直接指定 IP 段，逗号分隔。如 1.1.1.1,2.2.2.2/24"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Speed Test"
+msgstr "测速"
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+msgid "TEST AND APPLY"
+msgstr "测速并应用"
+
+msgid "STOP"
+msgstr "停止"
+
+msgid "Collecting data..."
+msgstr "收集中..."
+
+msgid "Best IP"
+msgstr "最优 IP"
+
+msgid "Enable DNS Update"
+msgstr "启用 DNS 更新"
+
+msgid "Automatically update Cloudflare DNS records after speed test"
+msgstr "测速完成后自动更新 Cloudflare DNS 记录"
+
+msgid "Cloudflare Email"
+msgstr "Cloudflare 邮箱"
+
+msgid "Your Cloudflare account email"
+msgstr "你的 Cloudflare 账户邮箱"
+
+msgid "API Key"
+msgstr "API 密钥"
+
+msgid "Cloudflare Global API Key"
+msgstr "Cloudflare 全局 API 密钥"
+
+msgid "Zone ID"
+msgstr "Zone ID"
+
+msgid "Cloudflare Zone ID, found in the API section of the dashboard"
+msgstr "Cloudflare Zone ID，在仪表盘 API 部分可以找到"
+
+msgid "Domain"
+msgstr "主域名"
+
+msgid "Root domain, e.g. example.com"
+msgstr "主域名，例如 example.com"
+
+msgid "Subdomain"
+msgstr "子域名"
+
+msgid "Subdomain, e.g. 'cf' for cf.example.com. Leave empty for root domain"
+msgstr "子域名，例如填 cf 则为 cf.example.com。留空则解析到主域名"
+
+msgid "Orange Cloud"
+msgstr "橙色云朵"
+
+msgid "Enable Cloudflare CDN proxy, hide origin server IP"
+msgstr "启用 Cloudflare CDN 代理，隐藏源站真实 IP"
+
+msgid "TTL"
+msgstr "TTL"
+
+msgid "Auto"
+msgstr "自动"
+
+msgid "1 min"
+msgstr "1 分钟"
+
+msgid "5 min"
+msgstr "5 分钟"
+
+msgid "1 hour"
+msgstr "1 小时"
+
+msgid "Delete Old Records"
+msgstr "删除旧记录"
+
+msgid "Delete existing DNS records before creating new ones"
+msgstr "创建新记录前删除已有 DNS 记录"
+
+msgid "Update Mode"
+msgstr "更新模式"
+
+msgid "Single IP (best)"
+msgstr "单 IP（最优）"
+
+msgid "Multi-IP"
+msgstr "多 IP"
+
+msgid "Max Records"
+msgstr "最大记录数"
+
+msgid "Maximum DNS records in multi mode (0=unlimited)"
+msgstr "多 IP 模式下最大 DNS 记录数（0=不限制）"
+
+msgid "Notification"
+msgstr "通知"
+
+msgid "Telegram Notification"
+msgstr "Telegram 通知"
+
+msgid "Bot Token"
+msgstr "Bot Token"
+
+msgid "Chat ID"
+msgstr "Chat ID"
+
+msgid "Telegram API Proxy"
+msgstr "Telegram API 代理"
+
+msgid "Custom API endpoint for Telegram, e.g. api.telegram.org or a proxy like t.me"
+msgstr "自定义 Telegram API 地址，如 api.telegram.org 或代理如 t.me"
+
+msgid "Pushplus Notification"
+msgstr "Pushplus 通知"
+
+msgid "Pushplus Token"
+msgstr "Pushplus Token"
+
+msgid "Cloudflare Speed Test Logs"
+msgstr "Cloudflare 测速日志"
+
+msgid "Log Output"
+msgstr "日志输出"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Clear logs"
+msgstr "清除日志"
+
+msgid "Re-download IP list?"
+msgstr "从远程重新下载 IP 列表？"
+
+msgid "IP list updated!"
+msgstr "IP 列表已更新！"
+
+msgid "IP List Management"
+msgstr "IP 列表管理"
+
+msgid "Save IP List"
+msgstr "保存 IP 列表"
+
+msgid "Re-download IP List"
+msgstr "重新下载 IP 列表"
+
+msgid "Load IPv6 List"
+msgstr "加载 IPv6 列表"
+
+msgid "Load IPv4 List"
+msgstr "加载 IPv4 列表"
+
+msgid "IP list saved!"
+msgstr "IP 列表已保存！"
+
+msgid "IP list updated!"
+msgstr "IP 列表已更新！"

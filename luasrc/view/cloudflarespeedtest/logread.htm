@@ -1,0 +1,81 @@
+<script type="text/javascript">
+//<![CDATA[
+var log_textarea = null;
+var first_load_done = false;
+
+function scrollToBottom() {
+    log_textarea.scrollTop = log_textarea.scrollHeight;
+}
+
+function clearlog() {
+    XHR.get('<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","clearlog")%>', null,
+        function(x, data) {
+            if (x && x.status == 200 && log_textarea) {
+                log_textarea.innerHTML = "";
+                scrollToBottom();
+            }
+        }
+    );
+}
+
+XHR.poll(3, '<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","getlog")%>', null,
+    function(x, data) {
+        if (x && x.status == 200) {
+            if (!log_textarea) log_textarea = document.getElementById('log_textarea');
+            var wasBottom = (log_textarea.scrollTop + log_textarea.clientHeight >= log_textarea.scrollHeight - 10);
+            log_textarea.innerHTML = x.responseText;
+            if (!first_load_done) {
+                scrollToBottom();
+                first_load_done = true;
+            }
+            else if (wasBottom) {
+                scrollToBottom();
+            }
+        }
+    }
+);
+//]]>
+</script>
+<fieldset class="cbi-section" id="_log_fieldset">
+    <input class="btn cbi-button cbi-button-remove" type="button" onclick="clearlog()" value="<%:Clear logs%>" />
+    <textarea id="log_textarea" class="cbi-input-textarea" style="width: 100%;margin-top: 10px;" data-update="change" rows="40" wrap="off" readonly="readonly"></textarea>
+</fieldset>
+
+<h2><%:IP List Management%></h2>
+<textarea id="iplist_content" class="cbi-input-textarea" style="width:100%;height:200px;font-family:monospace;font-size:12px;" rows="10" wrap="off"></textarea>
+<div style="margin-top:10px;">
+<input type="button" class="btn cbi-button cbi-button-apply" value="<%:Save IP List%>" onclick="saveIPList()" />
+<input type="button" class="btn cbi-button" value="<%:Re-download IP List%>" onclick="updateIPList()" />
+<input type="button" class="btn cbi-button" value="<%:Load IPv6 List%>" onclick="loadIPv6()" />
+<input type="button" class="btn cbi-button" value="<%:Load IPv4 List%>" onclick="loadIPv4()" />
+</div>
+
+<script type="text/javascript">
+function loadIPv4() {
+    XHR.get('<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","getiplist")%>', null,
+        function(x, data) {
+            if (data) document.getElementById('iplist_content').value = data.ipv4 || '';
+        }
+    );
+}
+function loadIPv6() {
+    XHR.get('<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","getiplist")%>', null,
+        function(x, data) {
+            if (data) document.getElementById('iplist_content').value = data.ipv6 || '';
+        }
+    );
+}
+function saveIPList() {
+    var content = document.getElementById('iplist_content').value;
+    XHR.get('<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","saveiplist")%>',
+        {content: content, type: 'ipv4'}, function() { alert('<%:IP list saved!%>'); }
+    );
+}
+function updateIPList() {
+    if (!confirm('<%:Re-download IP list?%>')) return;
+    XHR.get('<%=luci.dispatcher.build_url("admin","services","cloudflarespeedtest","updateiplist")%>', null,
+        function() { alert('<%:IP list updated!%>'); loadIPv4(); }
+    );
+}
+loadIPv4();
+//]]></script>
