@@ -208,7 +208,7 @@ tvIPs.write = function(e, e, e)
 end
 
 m.on_after_commit = function(self)
-	luci.sys.call("/etc/init.d/cloudflarespeedtest reload >/dev/null 2>&1 &")
+	luci.sys.call("/etc/init.d/cloudflarespeedtest reload >/dev/null 2>&1")
 end
 
 return m
