@@ -208,7 +208,29 @@ tvIPs.write = function(e, e, e)
 end
 
 m.on_after_commit = function(self)
-	luci.sys.call("/etc/init.d/cloudflarespeedtest reload >/dev/null 2>&1")
+	local uci = require("luci.model.uci").cursor()
+	local enabled = uci:get("cloudflarespeedtest", "global", "enabled") or "0"
+	local crontab = "/etc/crontabs/root"
+
+	luci.sys.call("sed -i '/cloudflarespeedtest/d' " .. crontab)
+
+	if enabled == "1" then
+		local hour = uci:get("cloudflarespeedtest", "global", "hour") or "5"
+		local minute = uci:get("cloudflarespeedtest", "global", "minute") or "0"
+		local custom = uci:get("cloudflarespeedtest", "global", "custome_cors_enabled") or "0"
+		local cron_expr = uci:get("cloudflarespeedtest", "global", "custome_cron") or ""
+		local entry
+
+		if custom == "1" and cron_expr ~= "" then
+			entry = cron_expr .. " /usr/bin/cloudflarespeedtest/cloudflarespeedtest.sh start"
+		else
+			entry = minute .. " " .. hour .. " * * * /usr/bin/cloudflarespeedtest/cloudflarespeedtest.sh start"
+		end
+
+		luci.sys.call("echo '" .. entry .. "' >> " .. crontab)
+	end
+
+	luci.sys.call("crontab " .. crontab)
 end
 
 return m
