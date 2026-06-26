@@ -34,7 +34,6 @@ add_cron() {
 
 del_cron() {
 	[ -f $CRON_FILE ] && sed -i '/cloudflarespeedtest/d' $CRON_FILE
-	/etc/init.d/cron restart
 }
 
 stop_service() {
