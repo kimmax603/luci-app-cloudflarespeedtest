@@ -5,7 +5,7 @@
     const STOP_URL = '<%=luci.dispatcher.build_url("admin", "services", "cloudflarespeedtest","stop")%>';
     const LOG_URL = '<%=luci.dispatcher.build_url("admin", "services", "cloudflarespeedtest","logread")%>';
 
-    XHR.poll(3, STATUS_URL, null,
+    XHR.poll(10, STATUS_URL, null,
         function(x, data) {
             var tb = document.getElementById('cloudflarespeedtest_status');
             if (data && tb) {
