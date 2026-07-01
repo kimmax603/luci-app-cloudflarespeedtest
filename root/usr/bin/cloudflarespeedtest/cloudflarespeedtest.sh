@@ -87,6 +87,7 @@ speed_test() {
 
 update_cloudflare_dns() {
 	local bestip="$1"
+	local region="$2"
 	if [ "$cf_dns_enabled" != "1" ]; then return; fi
 	if [ -z "$cf_dns_api_key" ] || [ -z "$cf_dns_email" ] || [ -z "$cf_dns_zone_id" ] || [ -z "$cf_dns_domain" ] || [ -z "$cf_dns_sub_domain" ]; then
 		echolog "Cloudflare DNS config incomplete, skip DNS update"
@@ -113,10 +114,10 @@ update_cloudflare_dns() {
 		local success=$(echo "$result" | jsonfilter -e '@.success' 2>/dev/null)
 		if [ "$success" = "true" ]; then
 			echolog "DNS record created successfully: ${full_domain} -> ${bestip}"
-			echo "IP地址 ${bestip} 成功导入到 ${full_domain}" >> /tmp/cfst_dns_result
+			echo "IP地址 ${bestip} [${region}] 成功导入到 ${full_domain}" >> /tmp/cfst_dns_result
 		else
 			echolog "Failed to create DNS record: $result"
-			echo "IP地址 ${bestip} 导入失败" >> /tmp/cfst_dns_result
+			echo "IP地址 ${bestip} [${region}] 导入失败" >> /tmp/cfst_dns_result
 		fi
 	else
 		echolog "Multi-IP mode: creating DNS records for ${full_domain}..."
@@ -129,7 +130,7 @@ update_cloudflare_dns() {
 			local rtype="A"; echo "$ip" | grep -q ":" && rtype="AAAA"
 			echolog "Creating DNS record: ${full_domain} -> ${ip} (${rtype})"
 			curl -s -X POST "${api_url}" -H "X-Auth-Email: ${cf_dns_email}" -H "X-Auth-Key: ${cf_dns_api_key}" -H "Content-Type: application/json" -d "{\"type\":\"${rtype}\",\"name\":\"${full_domain}\",\"content\":\"${ip}\",\"ttl\":${cf_dns_ttl},\"proxied\":${cf_proxied}}" > /dev/null 2>&1
-			echo "IP地址 ${ip} 成功导入到 ${full_domain}" >> /tmp/cfst_dns_result
+			echo "IP地址 ${ip} [${region}] 成功导入到 ${full_domain}" >> /tmp/cfst_dns_result
 			sleep 1
 		done
 		echolog "Created DNS records for ${full_domain}"
@@ -153,9 +154,10 @@ send_pushplus() {
 
 ip_replace() {
 	bestip=$(sed -n '2,1p' ${IP_FILE} | awk -F, '{print $1}')
+	region=$(sed -n '2,1p' ${IP_FILE} | awk -F, '{print $7}')
 	[ -z "${bestip}" ] && { echolog "No valid IP found"; return; }
-	echolog "Best IP: ${bestip}"
-	update_cloudflare_dns "$bestip"
+	echolog "Best IP: ${bestip} [${region}]"
+	update_cloudflare_dns "$bestip" "$region"
 	local notification_msg=""
 	if [ -f /tmp/cfst_dns_result ] && [ -s /tmp/cfst_dns_result ]; then
 		while IFS= read -r line; do
@@ -164,7 +166,7 @@ ip_replace() {
 			notification_msg="${notification_msg}${line} ($(date '+%Y-%m-%d %H:%M:%S'))"
 		done < /tmp/cfst_dns_result
 	else
-		notification_msg="Best IP: ${bestip}
+		notification_msg="Best IP: ${bestip} [${region}]
 Time: $(date '+%Y-%m-%d %H:%M:%S')"
 	fi
 	echolog "$notification_msg"
