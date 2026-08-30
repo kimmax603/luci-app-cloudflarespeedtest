@@ -88,26 +88,36 @@ jobs:
               mkdir -p "${EXTRACT_DIR}"
               cd "${EXTRACT_DIR}"
 
+              echo "  Extracting..."
               # Try gzip first, then plain tar (upstream changed format)
-              if ! tar xzf /tmp/cfst_${ARCH}.tar.gz 2>/dev/null; then
-                  tar xf /tmp/cfst_${ARCH}.tar.gz 2>/dev/null || {
-                      echo "  FAILED to extract ${ARCH}"
-                      FAIL_COUNT=$((FAIL_COUNT + 1))
-                      rm -rf "${EXTRACT_DIR}"
-                      continue
-                  }
+              EXTRACT_OK=false
+              if tar xzf /tmp/cfst_${ARCH}.tar.gz; then
+                  EXTRACT_OK=true
+                  echo "  Extracted via gzip"
+              elif tar xf /tmp/cfst_${ARCH}.tar.gz; then
+                  EXTRACT_OK=true
+                  echo "  Extracted via plain tar"
               fi
 
-              # Find cfst binary in extraction directory
-              CFST_PATH=$(find "${EXTRACT_DIR}" -name "cfst" -type f -print -quit 2>/dev/null)
-              if [ -z "$CFST_PATH" ] || [ ! -f "$CFST_PATH" ]; then
-                  echo "  FAILED: cfst binary not found after extraction ${ARCH}"
-                  echo "  Contents of ${EXTRACT_DIR}:"
-                  find "${EXTRACT_DIR}" -type f 2>/dev/null | head -20
+              if [ "$EXTRACT_OK" = false ]; then
+                  echo "  FAILED to extract ${ARCH}"
                   FAIL_COUNT=$((FAIL_COUNT + 1))
                   rm -rf "${EXTRACT_DIR}"
                   continue
               fi
+
+              # Find cfst binary in extraction directory
+              echo "  Searching for cfst binary..."
+              CFST_PATH=$(find "${EXTRACT_DIR}" -name "cfst" -type f -print -quit)
+              if [ -z "$CFST_PATH" ] || [ ! -f "$CFST_PATH" ]; then
+                  echo "  FAILED: cfst binary not found after extraction ${ARCH}"
+                  echo "  Contents of ${EXTRACT_DIR}:"
+                  find "${EXTRACT_DIR}" -type f | head -20
+                  FAIL_COUNT=$((FAIL_COUNT + 1))
+                  rm -rf "${EXTRACT_DIR}"
+                  continue
+              fi
+              echo "  Found: ${CFST_PATH}"
 
               chmod +x "$CFST_PATH"
               mv "$CFST_PATH" ${PKG_DIR}/usr/bin/cloudflarespeedtest/cfst
