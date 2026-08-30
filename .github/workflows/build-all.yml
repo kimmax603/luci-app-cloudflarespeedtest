@@ -82,15 +82,24 @@ jobs:
                   continue
               fi
 
-              cd /tmp && tar xzf cfst_${ARCH}.tar.gz
-              if [ $? -ne 0 ] || [ ! -f /tmp/cfst ]; then
-                  echo "  FAILED to extract"
+              # Extract: try gzip first, then plain tar (upstream changed format)
+              cd /tmp
+              if ! tar xzf cfst_${ARCH}.tar.gz 2>/dev/null; then
+                  tar xf cfst_${ARCH}.tar.gz 2>/dev/null || {
+                      echo "  FAILED to extract ${ARCH}"
+                      FAIL_COUNT=$((FAIL_COUNT + 1))
+                      continue
+                  }
+              fi
+              # Find the cfst binary anywhere in /tmp (may be in subdirectory)
+              CFST_PATH=$(find /tmp -name "cfst" -type f -print -quit 2>/dev/null)
+              if [ -z "$CFST_PATH" ]; then
+                  echo "  FAILED: cfst binary not found after extraction ${ARCH}"
                   FAIL_COUNT=$((FAIL_COUNT + 1))
                   continue
               fi
-
-              chmod +x /tmp/cfst
-              mv /tmp/cfst ${PKG_DIR}/usr/bin/cloudflarespeedtest/cfst
+              chmod +x "$CFST_PATH"
+              mv "$CFST_PATH" ${PKG_DIR}/usr/bin/cloudflarespeedtest/cfst
               rm -f /tmp/cfst_${ARCH}.tar.gz
 
               cp ${SRC}/luasrc/controller/cloudflarespeedtest.lua ${PKG_DIR}/usr/lib/lua/luci/controller/
