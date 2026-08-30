@@ -82,24 +82,36 @@ jobs:
                   continue
               fi
 
-              # Extract: try gzip first, then plain tar (upstream changed format)
-              cd /tmp
-              if ! tar xzf cfst_${ARCH}.tar.gz 2>/dev/null; then
-                  tar xf cfst_${ARCH}.tar.gz 2>/dev/null || {
+              # Extract to dedicated directory to isolate and find cfst reliably
+              EXTRACT_DIR="/tmp/cfst_extract_${ARCH}"
+              rm -rf "${EXTRACT_DIR}"
+              mkdir -p "${EXTRACT_DIR}"
+              cd "${EXTRACT_DIR}"
+
+              # Try gzip first, then plain tar (upstream changed format)
+              if ! tar xzf /tmp/cfst_${ARCH}.tar.gz 2>/dev/null; then
+                  tar xf /tmp/cfst_${ARCH}.tar.gz 2>/dev/null || {
                       echo "  FAILED to extract ${ARCH}"
                       FAIL_COUNT=$((FAIL_COUNT + 1))
+                      rm -rf "${EXTRACT_DIR}"
                       continue
                   }
               fi
-              # Find the cfst binary anywhere in /tmp (may be in subdirectory)
-              CFST_PATH=$(find /tmp -name "cfst" -type f -print -quit 2>/dev/null)
-              if [ -z "$CFST_PATH" ]; then
+
+              # Find cfst binary in extraction directory
+              CFST_PATH=$(find "${EXTRACT_DIR}" -name "cfst" -type f -print -quit 2>/dev/null)
+              if [ -z "$CFST_PATH" ] || [ ! -f "$CFST_PATH" ]; then
                   echo "  FAILED: cfst binary not found after extraction ${ARCH}"
+                  echo "  Contents of ${EXTRACT_DIR}:"
+                  find "${EXTRACT_DIR}" -type f 2>/dev/null | head -20
                   FAIL_COUNT=$((FAIL_COUNT + 1))
+                  rm -rf "${EXTRACT_DIR}"
                   continue
               fi
+
               chmod +x "$CFST_PATH"
               mv "$CFST_PATH" ${PKG_DIR}/usr/bin/cloudflarespeedtest/cfst
+              rm -rf "${EXTRACT_DIR}"
               rm -f /tmp/cfst_${ARCH}.tar.gz
 
               cp ${SRC}/luasrc/controller/cloudflarespeedtest.lua ${PKG_DIR}/usr/lib/lua/luci/controller/
