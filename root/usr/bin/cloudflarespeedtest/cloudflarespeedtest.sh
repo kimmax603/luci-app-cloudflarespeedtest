@@ -138,11 +138,25 @@ update_cloudflare_dns() {
 }
 
 send_telegram() {
-	local message="$1"
-	[ "$cf_dns_telegram_enabled" != "1" ] || [ -z "$cf_dns_telegram_bot_token" ] || [ -z "$cf_dns_telegram_chat_id" ] && return
-	local api_host="${cf_dns_telegram_api:-api.telegram.org}"
-	curl -s -X POST "https://${api_host}/bot${cf_dns_telegram_bot_token}/sendMessage" -d "chat_id=${cf_dns_telegram_chat_id}" -d "text=${message}" > /dev/null 2>&1
-	echolog "Telegram notification sent"
+        local message="$1"
+        if [ "$cf_dns_telegram_enabled" != "1" ]; then
+                echolog "Telegram notification disabled"
+                return
+        fi
+        if [ -z "$cf_dns_telegram_bot_token" ] || [ -z "$cf_dns_telegram_chat_id" ]; then
+                echolog "Telegram config incomplete"
+                return
+        fi
+        local api_host="${cf_dns_telegram_api:-api.telegram.org}"
+        local response
+        response=$(curl -sS --connect-timeout 10 --max-time 30 -X POST "https://${api_host}/bot${cf_dns_telegram_bot_token}/sendMessage" \
+                --data-urlencode "chat_id=${cf_dns_telegram_chat_id}" \
+                --data-urlencode "text=${message}" 2>&1)
+        if echo "$response" | grep -q '"ok":true'; then
+                echolog "Telegram notification sent successfully"
+        else
+                echolog "Telegram notification failed: $response"
+        fi
 }
 
 send_pushplus() {
@@ -171,7 +185,8 @@ Time: $(date '+%Y-%m-%d %H:%M:%S')"
 	fi
 	echolog "$notification_msg"
 	echolog "----------- DNS update complete ----------"
-	send_telegram "$notification_msg"
+        sleep 5
+        send_telegram "$notification_msg"
 	send_pushplus "$notification_msg"
 }
 

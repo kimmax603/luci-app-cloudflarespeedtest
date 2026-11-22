@@ -182,3 +182,35 @@ luci-app-cloudflarespeedtest/
 ## License
 
 GPL-3.0
+
+
+---
+
+## 更新说明
+
+### OpenClash 恢复与 Telegram 通知修复
+
+修复测速任务完成后恢复 OpenClash 时，OpenClash 服务虽然已经启动，但其代理、Fake-IP 和路由等网络组件可能尚未完全初始化，导致后续 Telegram 通知请求过早执行而失败的问题。
+
+#### 修改内容
+
+- 恢复 OpenClash 后增加网络就绪检测。
+- 使用 IPv4 测试 `https://api.telegram.org` 的实际连通性。
+- 网络未就绪时每 2 秒重试一次，最多等待 20 秒。
+- 检测到网络恢复后，再继续执行后续 DNS 更新和 Telegram 通知。
+- 如果 20 秒后仍未就绪，则记录警告日志，但不会阻塞后续流程。
+
+#### 修改文件
+
+`root/usr/bin/cloudflarespeedtest/proxy.sh`
+
+#### 典型日志
+
+    Restored: OpenClash
+    Waiting for OpenClash network... (1/10)
+    Waiting for OpenClash network... (2/10)
+    OpenClash network is ready
+    ...
+    Telegram notification sent successfully
+
+该修复已在 iStoreOS + OpenClash 环境中实际测试验证。
